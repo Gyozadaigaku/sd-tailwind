@@ -1,0 +1,54 @@
+name: Process Figma Tokens PR
+
+on: pull_request
+
+jobs:
+  run_if: # only if base branch is "figma-tokens"
+    if: ${{ github.head_ref == 'figma-tokens' }}
+    name: Process Figma Tokens
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@master
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run style-dictionary
+        run: pnpm run build:tokens
+
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: ${{ secrets.FIGMA_TOKENS_BOT_NAME }}
+          author_email: ${{ secrets.FIGMA_TOKENS_BOT_EMAIL }}
+          message: "chore: style-dictionary output"
+          add: "."
