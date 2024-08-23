@@ -65,11 +65,11 @@ module.exports = {
         ]
       },
       "green": {
-        "value": "#00FF00",
+        "value": "#00FE00",
         "filePath": "tokens/color.json",
         "isSource": true,
         "original": {
-          "value": "#00FF00"
+          "value": "#00FE00"
         },
         "name": "colorsBaseGreen",
         "attributes": {
